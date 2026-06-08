@@ -1,0 +1,118 @@
+{
+  "source": "Plantilla local editable - reemplazar por data oficial ONPE",
+  "updatedAt": "Actualiza esta fecha/hora con la fuente oficial",
+  "count": {
+    "computedPercent": 94.6,
+    "totalTables": 90223,
+    "processedTables": 85361,
+    "pendingTables": 4862
+  },
+  "totals": {
+    "eligibleVoters": 27300000,
+    "issuedVotes": 18790000,
+    "validVotes": 17600965,
+    "blankVotes": 112740,
+    "nullVotes": 1117310,
+    "absentVoters": 6330000
+  },
+  "candidates": {
+    "jp": {
+      "name": "Roberto Sánchez",
+      "party": "Juntos por el Perú",
+      "photo": "assets/jp.png",
+      "votes": 8806141,
+      "percent": 50.032
+    },
+    "keiko": {
+      "name": "Keiko Fujimori",
+      "party": "Fuerza Popular",
+      "photo": "assets/keiko.png",
+      "votes": 8794824,
+      "percent": 49.968
+    }
+  },
+  "provinces": [
+    {
+      "province": "Lima",
+      "lat": -12.0464,
+      "lng": -77.0428,
+      "jp": 52.1,
+      "keiko": 47.9,
+      "counted": 95.2
+    },
+    {
+      "province": "Callao",
+      "lat": -12.0566,
+      "lng": -77.1181,
+      "jp": 51.8,
+      "keiko": 48.2,
+      "counted": 96.3
+    },
+    {
+      "province": "Piura",
+      "lat": -5.1945,
+      "lng": -80.6328,
+      "jp": 44.8,
+      "keiko": 55.2,
+      "counted": 97.1
+    },
+    {
+      "province": "Arequipa",
+      "lat": -16.409,
+      "lng": -71.5375,
+      "jp": 53.6,
+      "keiko": 46.4,
+      "counted": 96.8
+    },
+    {
+      "province": "Cusco",
+      "lat": -13.5319,
+      "lng": -71.9675,
+      "jp": 58.3,
+      "keiko": 41.7,
+      "counted": 93.4
+    },
+    {
+      "province": "Puno",
+      "lat": -15.8402,
+      "lng": -70.0219,
+      "jp": 61.4,
+      "keiko": 38.6,
+      "counted": 91.2
+    }
+  ],
+  "foreign": [
+    {
+      "country": "Estados Unidos",
+      "lat": 38,
+      "lng": -97,
+      "jp": 42.1,
+      "keiko": 57.9,
+      "votes": 240000
+    },
+    {
+      "country": "España",
+      "lat": 40.4,
+      "lng": -3.7,
+      "jp": 55.5,
+      "keiko": 44.5,
+      "votes": 180000
+    },
+    {
+      "country": "Chile",
+      "lat": -33.4,
+      "lng": -70.6,
+      "jp": 48.9,
+      "keiko": 51.1,
+      "votes": 92000
+    },
+    {
+      "country": "Argentina",
+      "lat": -34.6,
+      "lng": -58.4,
+      "jp": 60.2,
+      "keiko": 39.8,
+      "votes": 56000
+    }
+  ]
+}
