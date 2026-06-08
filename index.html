@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ONPE · Segunda Vuelta Presidencial 2026</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #071018;
+      --panel: #111923;
+      --panel2: #0f1720;
+      --text: #f4f7fb;
+      --muted: #93a4b8;
+      --border: rgba(255,255,255,.10);
+      --orange: #f59e0b;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(245,158,11,.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1500px;
+      margin: auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,.14);
+      border: 1px solid rgba(239,68,68,.35);
+      color: #fecaca;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 18px var(--red);
+    }
+
+    h1 {
+      margin: 10px 0 4px;
+      font-size: clamp(28px, 3vw, 44px);
+      letter-spacing: -.04em;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    button {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 15px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,.10);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .kpis { grid-template-columns: repeat(6, 1fr); }
+    .two { grid-template-columns: 1.2fr 1fr; }
+    .maps { grid-template-columns: 1.3fr .9fr; }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.26);
+    }
+
+    .pad { padding: 18px; }
+
+    .title {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .big {
+      font-size: clamp(42px, 6vw, 78px);
+      font-weight: 950;
+      letter-spacing: -.06em;
+      line-height: .95;
+    }
+
+    .progress {
+      height: 14px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 14px 0;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), #93c5fd);
+      transition: .5s;
+    }
+
+    .kpi {
+      padding: 15px;
+      min-height: 115px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 900;
+      margin-top: 8px;
+    }
+
+    .story {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid var(--border);
+      color: #dbeafe;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .candidates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .candidate {
+      position: relative;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.035);
+    }
+
+    .candidate.leader {
+      border-color: rgba(34,197,94,.6);
+      box-shadow: 0 0 0 1px rgba(34,197,94,.25);
+    }
+
+    .candidate.keiko-leader {
+      border-color: rgba(245,158,11,.6);
+      box-shadow: 0 0 0 1px rgba(245,158,11,.25);
+    }
+
+    .candidate img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+    }
+
+    .candidate h2 {
+      margin: 0;
+      font-size: 23px;
+    }
+
+    .party {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .percent {
+      font-size: 48px;
+      font-weight: 950;
+      letter-spacing: -.06em;
+      margin: 10px 0 2px;
+    }
+
+    .bar {
+      height: 9px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+    }
+
+    .tag {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: rgba(34,197,94,.14);
+      color: #bbf7d0;
+      border: 1px solid rgba(34,197,94,.35);
+      display: none;
+    }
+
+    #peruMap, #worldMap {
+      width: 100%;
+      height: 520px;
+      background: #0b131c;
+    }
+
+    #worldMap { height: 420px; }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 5px;
+      vertical-align: -1px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .08em;
+    }
+
+    .pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .pill.green {
+      background: rgba(34,197,94,.15);
+      color: #86efac;
+    }
+
+    .pill.orange {
+      background: rgba(245,158,11,.15);
+      color: #fcd34d;
+    }
+
+    footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .two, .maps, .candidates { grid-template-columns: 1fr; }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .container { padding: 14px; }
+      .kpis { grid-template-columns: 1fr; }
+      .candidate {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .candidate img { margin: auto; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+
+    <header>
+      <div>
+        <span class="live"><span class="dot"></span> En vivo</span>
+        <h1>ONPE · Segunda Vuelta Presidencial 2026</h1>
+        <div class="sub">
+          Resultados oficiales · Fuente: <b id="source">ONPE</b> · Actualizado:
+          <b id="updatedAt">--</b>
+        </div>
+      </div>
+
+      <div>
+        <div class="sub">Próxima actualización en <b id="countdown">30</b>s</div>
+        <button onclick="loadData()">Actualizar ahora</button>
+      </div>
+    </header>
+
+    <section class="grid two">
+      <div class="panel pad">
+        <div class="title">Avance del cómputo</div>
+        <div class="big"><span id="computedPercent">0.0</span>%</div>
+        <div class="sub">Actas contabilizadas</div>
+        <div class="progress"><span id="progressBar"></span></div>
+        <div class="sub">
+          Mesas habilitadas: <b id="totalTables">--</b> ·
+          Procesadas: <b id="processedTables">--</b> ·
+          Pendientes: <b id="pendingTables">--</b>
+        </div>
+        <div class="story" id="storyProgress">El avance del conteo permite medir la estabilidad de la tendencia nacional.</div>
+      </div>
+
+      <div class="panel pad">
+        <div class="title">Diferencia nacional</div>
+        <div class="big" style="font-size:54px"><span id="voteDiff">--</span></div>
+        <div class="sub">Diferencia en votos válidos entre candidatos.</div>
+        <div class="story" id="storyLeader">La ventaja actual resume el escenario competitivo nacional.</div>
+      </div>
+    </section>
+
+    <section class="grid kpis" style="margin-top:16px">
+      <div class="panel kpi"><div class="kpi-label">Electores hábiles</div><div class="kpi-value" id="eligibleVoters">--</div></div>
+      <div class="panel kpi"><div class="kpi-label">Votos emitidos</div><div class="kpi-value" id="issuedVotes">--</div><div class="sub" id="participation">-- participación</div></div>
+      <div class="panel kpi"><div class="kpi-label">Votos válidos</div><div class="kpi-value" id="validVotes">--</div></div>
+      <div class="panel kpi"><div class="kpi-label">Votos blancos</div><div class="kpi-value" id="blankVotes">--</div></div>
+      <div class="panel kpi"><div class="kpi-label">Votos nulos</div><div class="kpi-value" id="nullVotes">--</div></div>
+      <div class="panel kpi"><div class="kpi-label">Ausentes</div><div class="kpi-value" id="absentVoters">--</div></div>
+    </section>
+
+    <section class="panel pad" style="margin-top:16px">
+      <div class="title">Candidatos presidenciales</div>
+
+      <div class="candidates">
+        <article class="candidate" id="jpCard">
+          <span class="tag" id="jpTag">Lidera</span>
+          <img id="jpPhoto" src="assets/jp.png" alt="Foto JP">
+          <div>
+            <h2 id="jpName">JP</h2>
+            <div class="party" id="jpParty">Juntos por el Perú</div>
+            <div class="percent" style="color:var(--green)"><span id="jpPercent">0.000</span>%</div>
+            <div class="sub"><span id="jpVotes">--</span> votos válidos</div>
+            <div class="bar"><span id="jpBar" style="background:var(--green)"></span></div>
+          </div>
+        </article>
+
+        <article class="candidate" id="keikoCard">
+          <span class="tag" id="keikoTag" style="background:rgba(245,158,11,.16);color:#fde68a;border-color:rgba(245,158,11,.4)">Lidera</span>
+          <img id="keikoPhoto" src="assets/keiko.png" alt="Foto Keiko Fujimori">
+          <div>
+            <h2 id="keikoName">Keiko Fujimori</h2>
+            <div class="party" id="keikoParty">Fuerza Popular</div>
+            <div class="percent" style="color:var(--orange)"><span id="keikoPercent">0.000</span>%</div>
+            <div class="sub"><span id="keikoVotes">--</span> votos válidos</div>
+            <div class="bar"><span id="keikoBar" style="background:var(--orange)"></span></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="story" id="storyCandidates">La comparación directa permite identificar si la ventaja es amplia o estrecha.</div>
+    </section>
+
+    <section class="grid two" style="margin-top:16px">
+      <div class="panel pad">
+        <div class="title">Votos válidos</div>
+        <canvas id="validChart"></canvas>
+        <div class="story" id="storyValid">La distribución de votos válidos muestra el equilibrio nacional.</div>
+      </div>
+
+      <div class="panel pad">
+        <div class="title">Tipos de voto</div>
+        <canvas id="voteTypeChart"></canvas>
+        <div class="story" id="storyVoteType">Blancos y nulos contextualizan la participación efectiva.</div>
+      </div>
+    </section>
+
+    <section class="grid maps" style="margin-top:16px">
+      <div class="panel">
+        <div class="pad">
+          <div class="title">Mapa del Perú por provincias</div>
+          <div class="sub">Naranja: gana Keiko · Verde: gana JP.</div>
+        </div>
+        <div id="peruMap"></div>
+        <div class="pad">
+          <div class="legend">
+            <span><i style="background:var(--green)"></i>Gana JP</span>
+            <span><i style="background:var(--orange)"></i>Gana Keiko</span>
+            <span><i style="background:#64748b"></i>Sin dato</span>
+          </div>
+          <div class="story" id="storyPeruMap">El mapa territorial permite ubicar bastiones y provincias competitivas.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pad">
+          <div class="title">Voto en el extranjero</div>
+          <div class="sub">Mapa mundi con marcador por país.</div>
+        </div>
+        <div id="worldMap"></div>
+        <div class="pad">
+          <div class="story" id="storyWorldMap">El voto exterior puede comportarse distinto al patrón nacional.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel pad" style="margin-top:16px">
+      <div class="title">Provincias más disputadas</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Provincia</th>
+            <th>Líder</th>
+            <th>JP</th>
+            <th>Keiko</th>
+            <th>Diferencia</th>
+            <th>Conteo</th>
+          </tr>
+        </thead>
+        <tbody id="closeTable"></tbody>
+      </table>
+      <div class="story">Las provincias con menor diferencia pueden cambiar la lectura final si aún tienen actas pendientes.</div>
+    </section>
+
+    <footer>
+      <span>Dashboard electoral ejecutivo</span>
+      <span>Última actualización: <b id="footerUpdated">--</b></span>
+    </footer>
+
+  </main>
+
+  <script>
+    const DATA_URL = "data/resultados.json";
+    const PERU_GEOJSON_URL = "data/peru-provincias.geojson";
+    const REFRESH_SECONDS = 30;
+
+    const COLORS = { jp: "#22c55e", keiko: "#f59e0b", none: "#64748b" };
+
+    const fallbackData = {
+      source: "Data local de prueba",
+      updatedAt: "08/06/2026 12:22 hrs",
+      count: { computedPercent: 94.1, totalTables: 90223, processedTables: 84699, pendingTables: 5524 },
+      totals: {
+        eligibleVoters: 27300000,
+        issuedVotes: 18790000,
+        validVotes: 17600965,
+        blankVotes: 112740,
+        nullVotes: 1117310,
+        absentVoters: 6330000
+      },
+      candidates: {
+        jp: {
+          name: "JP",
+          party: "Juntos por el Perú",
+          photo: "assets/jp.png",
+          votes: 8806141,
+          percent: 50.032
+        },
+        keiko: {
+          name: "Keiko Fujimori",
+          party: "Fuerza Popular",
+          photo: "assets/keiko.png",
+          votes: 8794824,
+          percent: 49.968
+        }
+      },
+      provinces: [
+        { province: "Lima", lat: -12.0464, lng: -77.0428, jp: 52.1, keiko: 47.9, counted: 95.2 },
+        { province: "Callao", lat: -12.0566, lng: -77.1181, jp: 51.8, keiko: 48.2, counted: 96.3 },
+        { province: "Piura", lat: -5.1945, lng: -80.6328, jp: 44.8, keiko: 55.2, counted: 97.1 },
+        { province: "Arequipa", lat: -16.4090, lng: -71.5375, jp: 53.6, keiko: 46.4, counted: 96.8 },
+        { province: "Cusco", lat: -13.5319, lng: -71.9675, jp: 58.3, keiko: 41.7, counted: 93.4 },
+        { province: "Puno", lat: -15.8402, lng: -70.0219, jp: 61.4, keiko: 38.6, counted: 91.2 }
+      ],
+      foreign: [
+        { country: "Estados Unidos", lat: 38, lng: -97, jp: 42.1, keiko: 57.9, votes: 240000 },
+        { country: "España", lat: 40.4, lng: -3.7, jp: 55.5, keiko: 44.5, votes: 180000 },
+        { country: "Chile", lat: -33.4, lng: -70.6, jp: 48.9, keiko: 51.1, votes: 92000 },
+        { country: "Argentina", lat: -34.6, lng: -58.4, jp: 60.2, keiko: 39.8, votes: 56000 }
+      ]
+    };
+
+    let validChart;
+    let voteTypeChart;
+    let peruMap;
+    let worldMap;
+    let geoLayer;
+    let countdown = REFRESH_SECONDS;
+
+    const fmt = new Intl.NumberFormat("es-PE");
+
+    function $(id) { return document.getElementById(id); }
+    function text(id, value) { const el = $(id); if (el) el.textContent = value; }
+
+    function compact(n) {
+      n = Number(n || 0);
+      if (n >= 1000000) return (n / 1000000).toFixed(2) + "M";
+      if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+      return fmt.format(n);
+    }
+
+    function percent(n, d = 1) { return Number(n || 0).toFixed(d) + "%"; }
+    function winner(row) { return Number(row.jp || 0) >= Number(row.keiko || 0) ? "jp" : "keiko"; }
+    function winnerName(row) { return winner(row) === "jp" ? "JP" : "Keiko"; }
+    function winnerColor(row) { return winner(row) === "jp" ? COLORS.jp : COLORS.keiko; }
+
+    async function loadData() {
+      try {
+        const response = await fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" });
+        if (!response.ok) throw new Error("No se pudo cargar resultados.json");
+        const data = await response.json();
+        render(data);
+      } catch (error) {
+        render(fallbackData);
+      }
+      countdown = REFRESH_SECONDS;
+    }
+
+    function render(data) {
+      const c = data.count;
+      const t = data.totals;
+      const jp = data.candidates.jp;
+      const keiko = data.candidates.keiko;
+
+      text("source", data.source || "ONPE");
+      text("updatedAt", data.updatedAt || "--");
+      text("footerUpdated", data.updatedAt || "--");
+
+      text("computedPercent", Number(c.computedPercent).toFixed(1));
+      $("progressBar").style.width = c.computedPercent + "%";
+      text("totalTables", fmt.format(c.totalTables));
+      text("processedTables", fmt.format(c.processedTables));
+      text("pendingTables", fmt.format(c.pendingTables));
+
+      text("eligibleVoters", compact(t.eligibleVoters));
+      text("issuedVotes", compact(t.issuedVotes));
+      text("validVotes", compact(t.validVotes));
+      text("blankVotes", compact(t.blankVotes));
+      text("nullVotes", compact(t.nullVotes));
+      text("absentVoters", compact(t.absentVoters));
+
+      const participation = t.issuedVotes / t.eligibleVoters * 100;
+      text("participation", percent(participation, 1) + " participación");
+
+      setCandidate("jp", jp);
+      setCandidate("keiko", keiko);
+
+      const diffVotes = Math.abs(jp.votes - keiko.votes);
+      const diffPoints = Math.abs(jp.percent - keiko.percent);
+      const leader = jp.votes >= keiko.votes ? jp : keiko;
+      const leaderKey = jp.votes >= keiko.votes ? "jp" : "keiko";
+
+      text("voteDiff", fmt.format(diffVotes) + " votos");
+      text("storyLeader", `${leader.name} lidera por ${fmt.format(diffVotes)} votos, equivalente a ${diffPoints.toFixed(3)} puntos porcentuales.`);
+      text("storyProgress", `El conteo alcanza ${percent(c.computedPercent, 1)}, con ${fmt.format(c.pendingTables)} mesas pendientes.`);
+      text("storyCandidates", `La elección se mantiene con una brecha de ${diffPoints.toFixed(3)} puntos porcentuales entre ambos candidatos.`);
+
+      $("jpCard").classList.toggle("leader", leaderKey === "jp");
+      $("keikoCard").classList.toggle("keiko-leader", leaderKey === "keiko");
+      $("jpTag").style.display = leaderKey === "jp" ? "inline-block" : "none";
+      $("keikoTag").style.display = leaderKey === "keiko" ? "inline-block" : "none";
+
+      drawCharts(data);
+      drawMaps(data);
+      drawCloseTable(data.provinces);
+    }
+
+    function setCandidate(key, person) {
+      text(key + "Name", person.name);
+      text(key + "Party", person.party);
+      text(key + "Percent", Number(person.percent).toFixed(3));
+      text(key + "Votes", fmt.format(person.votes));
+      $(key + "Bar").style.width = person.percent + "%";
+      if (person.photo) $(key + "Photo").src = person.photo;
+    }
+
+    function drawCharts(data) {
+      const jp = data.candidates.jp;
+      const keiko = data.candidates.keiko;
+      const t = data.totals;
+
+      if (validChart) validChart.destroy();
+      validChart = new Chart($("validChart"), {
+        type: "doughnut",
+        data: {
+          labels: [jp.name, keiko.name],
+          datasets: [{ data: [jp.percent, keiko.percent], backgroundColor: [COLORS.jp, COLORS.keiko], borderWidth: 0 }]
+        },
+        options: chartOptions()
+      });
+
+      if (voteTypeChart) voteTypeChart.destroy();
+      voteTypeChart = new Chart($("voteTypeChart"), {
+        type: "bar",
+        data: {
+          labels: ["Válidos", "Blancos", "Nulos"],
+          datasets: [{ data: [t.validVotes, t.blankVotes, t.nullVotes], backgroundColor: ["#3b82f6", "#94a3b8", "#ef4444"], borderRadius: 8 }]
+        },
+        options: {
+          ...chartOptions(),
+          indexAxis: "y",
+          scales: {
+            x: { ticks: { color: "#93a4b8" }, grid: { color: "rgba(255,255,255,.08)" } },
+            y: { ticks: { color: "#93a4b8" }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function chartOptions() {
+      return {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: "#e5edf7" } }
+        }
+      };
+    }
+
+    async function drawMaps(data) {
+      if (!peruMap) {
+        peruMap = L.map("peruMap", { attributionControl: false }).setView([-9.2, -75], 5);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(peruMap);
+      }
+
+      if (!worldMap) {
+        worldMap = L.map("worldMap", { attributionControl: false }).setView([10, -20], 2);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(worldMap);
+      }
+
+      drawProvinceMarkers(data.provinces);
+      drawWorldMarkers(data.foreign);
+
+      try {
+        const geo = await fetch(PERU_GEOJSON_URL).then(r => r.ok ? r.json() : null);
+        if (geo) drawGeoJsonProvinces(geo, data.provinces);
+      } catch (e) {
+        console.log("GeoJSON provincial no disponible. Se usan marcadores.");
+      }
+    }
+
+    function drawProvinceMarkers(provinces) {
+      peruMap.eachLayer(layer => {
+        if (layer instanceof L.CircleMarker) peruMap.removeLayer(layer);
+      });
+
+      provinces.forEach(p => {
+        L.circleMarker([p.lat, p.lng], {
+          radius: 8,
+          color: winnerColor(p),
+          fillColor: winnerColor(p),
+          fillOpacity: .85,
+          weight: 2
+        })
+        .bindTooltip(`
+          <b>${p.province}</b><br>
+          Líder: ${winnerName(p)}<br>
+          JP: ${percent(p.jp, 1)} · Keiko: ${percent(p.keiko, 1)}<br>
+          Conteo: ${percent(p.counted, 1)}
+        `)
+        .addTo(peruMap);
+      });
+    }
+
+    function drawGeoJsonProvinces(geo, provinces) {
+      if (geoLayer) peruMap.removeLayer(geoLayer);
+
+      const index = new Map(provinces.map(p => [normalize(p.province), p]));
+
+      geoLayer = L.geoJSON(geo, {
+        style: feature => {
+          const name = feature.properties.PROVINCIA || feature.properties.province || feature.properties.name || feature.properties.NOMBPROV;
+          const row = index.get(normalize(name));
+          return {
+            color: "rgba(255,255,255,.25)",
+            weight: .6,
+            fillColor: row ? winnerColor(row) : COLORS.none,
+            fillOpacity: row ? .65 : .18
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          const name = feature.properties.PROVINCIA || feature.properties.province || feature.properties.name || feature.properties.NOMBPROV;
+          const row = index.get(normalize(name));
+          layer.bindTooltip(row ? `
+            <b>${name}</b><br>
+            Líder: ${winnerName(row)}<br>
+            JP: ${percent(row.jp, 1)} · Keiko: ${percent(row.keiko, 1)}<br>
+            Conteo: ${percent(row.counted, 1)}
+          ` : `<b>${name}</b><br>Sin datos`);
+        }
+      }).addTo(peruMap);
+    }
+
+    function drawWorldMarkers(countries) {
+      worldMap.eachLayer(layer => {
+        if (layer instanceof L.CircleMarker) worldMap.removeLayer(layer);
+      });
+
+      countries.forEach(c => {
+        const size = Math.max(7, Math.min(26, Math.sqrt(c.votes / 1000)));
+        L.circleMarker([c.lat, c.lng], {
+          radius: size,
+          color: winnerColor(c),
+          fillColor: winnerColor(c),
+          fillOpacity: .75,
+          weight: 2
+        })
+        .bindTooltip(`
+          <b>${c.country}</b><br>
+          Líder: ${winnerName(c)}<br>
+          JP: ${percent(c.jp, 1)} · Keiko: ${percent(c.keiko, 1)}<br>
+          Votos: ${fmt.format(c.votes)}
+        `)
+        .addTo(worldMap);
+      });
+    }
+
+    function drawCloseTable(provinces) {
+      const rows = [...provinces]
+        .map(p => ({ ...p, diff: Math.abs(p.jp - p.keiko), leader: winner(p) }))
+        .sort((a, b) => a.diff - b.diff)
+        .slice(0, 8);
+
+      $("closeTable").innerHTML = rows.map(p => `
+        <tr>
+          <td><b>${p.province}</b></td>
+          <td><span class="pill ${p.leader === "jp" ? "green" : "orange"}">${winnerName(p)}</span></td>
+          <td>${percent(p.jp, 1)}</td>
+          <td>${percent(p.keiko, 1)}</td>
+          <td>${p.diff.toFixed(1)} pp</td>
+          <td>${percent(p.counted, 1)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function normalize(value) {
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) loadData();
+      text("countdown", countdown);
+    }, 1000);
+
+    loadData();
+  </script>
+</body>
+</html>
